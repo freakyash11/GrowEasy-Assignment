@@ -32,7 +32,7 @@ export function CsvPreviewTable({ data, onConfirm, onCancel, isImporting }: CsvP
   }, [data.headers]);
 
   return (
-    <div className="w-full bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="w-full bg-white dark:bg-slate-950 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col">
       <div className="w-full p-6 flex flex-col space-y-4 animate-in fade-in zoom-in-95 duration-300">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
@@ -44,7 +44,7 @@ export function CsvPreviewTable({ data, onConfirm, onCancel, isImporting }: CsvP
           </span>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <div className="overflow-hidden flex flex-col">
           <DataTable columns={columns} data={data.rows} emptyMessage="No rows to display." />
         </div>
       </div>

@@ -37,8 +37,8 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="w-full h-full min-h-0 overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm transition-colors">
-      <div className="flex-1 overflow-auto relative min-h-0">
+    <div className="w-full overflow-hidden flex flex-col border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm transition-colors">
+      <div className="overflow-auto relative max-h-[500px]">
         <div className="inline-block min-w-full align-middle">
           <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-950 sticky top-0 z-10 shadow-sm transition-colors">

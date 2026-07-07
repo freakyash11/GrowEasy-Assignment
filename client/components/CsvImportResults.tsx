@@ -153,7 +153,7 @@ export function CsvImportResults({ result, onReset, onRetry, isRetrying = false 
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-hidden flex flex-col min-h-[400px]">
+        <div className="overflow-hidden flex flex-col">
           {activeTab === 'success' && (
             <DataTable columns={successColumns} data={success} emptyMessage="No successful records found." />
           )}
