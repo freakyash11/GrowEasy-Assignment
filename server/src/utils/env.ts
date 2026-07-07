@@ -10,7 +10,7 @@ interface EnvConfig {
   /** Maximum number of concurrent AI batch requests (default: 3). */
   MAX_CONCURRENCY: number;
   /** Permitted client origin for CORS. */
-  CLIENT_URL: string;
+  CORS_ORIGIN: string;
 }
 
 /**
@@ -24,6 +24,6 @@ export const env: EnvConfig = {
   OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
   BATCH_SIZE: parseInt(process.env.BATCH_SIZE ?? '20', 10),
   MAX_CONCURRENCY: parseInt(process.env.MAX_CONCURRENCY ?? '3', 10),
-  CLIENT_URL: process.env.CLIENT_URL ?? 'http://localhost:3000',
+  CORS_ORIGIN: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
 };
 
