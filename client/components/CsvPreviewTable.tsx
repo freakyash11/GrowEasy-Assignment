@@ -44,7 +44,7 @@ export function CsvPreviewTable({ data, onConfirm, onCancel, isImporting }: CsvP
           </span>
         </div>
 
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           <DataTable columns={columns} data={data.rows} emptyMessage="No rows to display." />
         </div>
       </div>
