@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from './DataTable';
-import { CheckCircle2, RotateCcw, AlertCircle, XCircle, AlertTriangle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { CheckCircle2, RotateCcw, AlertCircle, XCircle, AlertTriangle, ArrowLeft, RefreshCw, Search, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export interface SkippedRecordData {
@@ -33,7 +33,31 @@ interface CsvImportResultsProps {
 
 export function CsvImportResults({ result, onReset, onRetry, isRetrying = false }: CsvImportResultsProps) {
   const [activeTab, setActiveTab] = useState<'success' | 'skipped' | 'failed'>('success');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { success, skipped, failed, totalProcessed } = result;
+
+  // Debounce the search query by 150 ms
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedQuery(searchQuery.trim().toLowerCase());
+    }, 150);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchQuery]);
+
+  // Client-side filtered success records
+  const filteredSuccess = useMemo(() => {
+    if (!debouncedQuery) return success;
+    return success.filter((record) => {
+      const email = (record['email'] ?? '').toLowerCase();
+      const mobile = (record['mobile_without_country_code'] ?? '').toLowerCase();
+      return email.includes(debouncedQuery) || mobile.includes(debouncedQuery);
+    });
+  }, [success, debouncedQuery]);
 
   const successColumns = useMemo<ColumnDef<any>[]>(() => {
     if (success.length === 0) return [];
@@ -130,32 +154,75 @@ export function CsvImportResults({ result, onReset, onRetry, isRetrying = false 
       {/* ── Tabs ───────────────────────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col transition-colors">
         
-        {/* Tab Headers */}
-        <div className="flex border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 transition-colors">
-          <button
-            onClick={() => setActiveTab('success')}
-            className={cn("flex-1 py-3 px-4 text-sm font-medium transition-colors border-b-2", activeTab === 'success' ? "bg-white dark:bg-slate-900 border-indigo-600 text-indigo-700 dark:text-indigo-400" : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200")}
-          >
-            Success ({success.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('skipped')}
-            className={cn("flex-1 py-3 px-4 text-sm font-medium transition-colors border-b-2", activeTab === 'skipped' ? "bg-white dark:bg-slate-900 border-indigo-600 text-indigo-700 dark:text-indigo-400" : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200")}
-          >
-            Skipped ({skipped.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('failed')}
-            className={cn("flex-1 py-3 px-4 text-sm font-medium transition-colors border-b-2", activeTab === 'failed' ? "bg-white dark:bg-slate-900 border-indigo-600 text-indigo-700 dark:text-indigo-400" : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200")}
-          >
-            Failed ({failed.length})
-          </button>
+        {/* Tab Headers + Search Bar */}
+        <div className="flex flex-wrap items-stretch border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 transition-colors gap-y-0">
+          {/* Tabs (left) */}
+          <div className="flex flex-1 min-w-0">
+            <button
+              onClick={() => setActiveTab('success')}
+              className={cn("flex-1 py-3 px-4 text-sm font-medium transition-colors border-b-2", activeTab === 'success' ? "bg-white dark:bg-slate-900 border-indigo-600 text-indigo-700 dark:text-indigo-400" : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200")}
+            >
+              Success ({success.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('skipped')}
+              className={cn("flex-1 py-3 px-4 text-sm font-medium transition-colors border-b-2", activeTab === 'skipped' ? "bg-white dark:bg-slate-900 border-indigo-600 text-indigo-700 dark:text-indigo-400" : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200")}
+            >
+              Skipped ({skipped.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('failed')}
+              className={cn("flex-1 py-3 px-4 text-sm font-medium transition-colors border-b-2", activeTab === 'failed' ? "bg-white dark:bg-slate-900 border-indigo-600 text-indigo-700 dark:text-indigo-400" : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200")}
+            >
+              Failed ({failed.length})
+            </button>
+          </div>
+
+          {/* Search bar — only visible on the Success tab */}
+          {activeTab === 'success' && (
+            <div className="flex items-center gap-2 px-3 py-2 border-b-2 border-transparent">
+              {/* Showing X of Y label */}
+              {debouncedQuery && (
+                <span className="hidden sm:block text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                  {filteredSuccess.length} / {success.length}
+                </span>
+              )}
+              {/* Input wrapper */}
+              <div className="relative flex items-center">
+                <Search className="absolute left-2.5 w-3.5 h-3.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Enter email or phone number..."
+                  className="pl-8 pr-7 py-1.5 w-56 text-xs rounded-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors shadow-sm"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
+                    className="absolute right-2 flex items-center justify-center w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500 transition-colors"
+                  >
+                    <X className="w-2.5 h-2.5 text-slate-600 dark:text-slate-300" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tab Content */}
         <div className="overflow-hidden flex flex-col">
           {activeTab === 'success' && (
-            <DataTable columns={successColumns} data={success} emptyMessage="No successful records found." />
+            <DataTable
+              columns={successColumns}
+              data={filteredSuccess}
+              emptyMessage={
+                debouncedQuery
+                  ? 'No leads match your search.'
+                  : 'No successful records found.'
+              }
+            />
           )}
           {activeTab === 'skipped' && (
             <DataTable columns={skippedColumns} data={skipped} emptyMessage="No records were skipped." />
